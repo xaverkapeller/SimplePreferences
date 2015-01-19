@@ -299,9 +299,4 @@ public class PreferencesCompiler extends AbstractProcessor {
 
         return types;
     }
-
-    private JavaWriter createWriter(String newSourceName) throws IOException {
-        final JavaFileObject sourceFile = processingEnv.getFiler().createSourceFile(newSourceName);
-        return new JavaWriter(sourceFile.openWriter());
-    }
 }
