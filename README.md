@@ -43,6 +43,8 @@ But beware! At the moment only a few primitive types and `String` are supported!
  - `long`
  - `float`
  - `String`
+ 
+By default every interface will use its own `SharedPreferences` instance, but you can pass a custom preferences name or even a whole `SharedPreferences` instance into the `PreferencesFactory` if you want.
 
 Installation
 --------
