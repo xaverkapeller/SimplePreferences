@@ -1,10 +1,12 @@
-# SimplePreferences
+SimplePreferences
+===========
 
-SimplePreferences is a library which makes preferences simple and easy to use.
+SimplePreferences is a library which uses compile time annotation processing to make preferences simple and easy to use.
 
-# How to use it
+How to use it
+-----
 
-Just create an interface like this with all the getters and setters for the preferences you need and then annotate it with @Preferences:
+Just create an interface like this with all the getters and setters for the preferences you need and then annotate it with `@Preferences`:
 
 ```java
 @Preferences
@@ -22,20 +24,32 @@ You can then create an instance of `ExamplePreferences` by using the `Preference
 
 ```java
 ExamplePreferences preferences = PreferencesFactory.create(ExamplePreferences.class, context);
+```
 
+The rest is handled by the library, you can just use the getters and setters like you normally would:
+
+```java
 String name = preferences.getText();
 preferences.setText(someOtherText);
 
 int count = preferences.getCount();
 preferences.setCount(count + 1);
-
 ```
 
-# Installation
+But beware! At the moment only a few primitive types and `String` are supported! The full list is:
 
-1) Just download this library and add the three modules SimplePreferences, ProcessorUtils and SimplePreferencesCompiler to your Android project.
+ - `int`
+ - `boolean`
+ - `long`
+ - `float`
+ - `String`
 
-2) The top of the build.gradle file of your app needs to look like this:
+Installation
+--------
+
+ **1)** Just download this library and add the three modules SimplePreferences, ProcessorUtils and SimplePreferencesCompiler to your Android project.
+
+ **2)** The top of the build.gradle file of your app needs to look like this:
 
 ```
 buildscript {
@@ -52,11 +66,11 @@ apply plugin: 'android-apt'
 ...
 ```
 
-3) In the dependencies add these two lines at the bottom:
+ **3)** In the dependencies add these two lines at the bottom:
 
 ```
-    apt project(':SimplePreferencesCompiler')
-    compile project(':SimplePreferences')
+apt project(':SimplePreferencesCompiler')
+compile project(':SimplePreferences')
 ```
 
 The whole build.gradle should then look something like this:
@@ -102,5 +116,5 @@ dependencies {
 }
 ```
 
-include ':app', ':SimplePreferences', ':ProcessorUtils', ':SimplePreferencesCompiler'
+After that you are all set! Just annotate your preference interfaces with `@Preferences` and you are good to go!
 
