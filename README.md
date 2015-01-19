@@ -118,3 +118,43 @@ dependencies {
 
 After that you are all set! Just annotate your preference interfaces with `@Preferences` and you are good to go!
 
+How it works
+------
+
+The module SimplePreferencesCompiler is implementing an annotation processor. This processor will be executed everytime you compile your project. It will look for interfaces in your source code that have been annotated with the `@Preferences` annotation and if it finds any will generate an approrpirate implementation of those interfaces for you! For example for an interface like this:
+
+```java
+@Preferences
+public interface ExamplePreferences {
+
+    public void setSomeValue(String name);
+    public String getSomeValue();
+}
+```
+
+The annotation processor would generate an implementation that looks something like this:
+
+```java
+public final class ExamplePreferences$$Impl implements ExamplePreferences {
+  private final android.content.SharedPreferences _a;
+  public ExamplePreferences$$Impl(android.content.SharedPreferences a) {
+    _a = a;
+  }
+  public void setSomeValue(String a) {
+    _a.edit().putString("SomeValue", a).commit();
+  }
+  public String getSomeValue() {
+    return _a.getString("SomeValue", null);
+  }
+}
+```
+
+As you can see the name of the getter and setter methods is used as a key! So be careful when changing the name of those methods. When you use the `PreferencesFactory` to create an instace of your interface it is looking for the implementation at runtime like this:
+
+```java
+final String implName = interfaceClass.getName() + "$$Impl";
+final Class<?> implClass = Class.forName(implName);
+T instance = (T) implClass.getConstructor(SharedPreferences.class).newInstance(sharedPreferences);
+```
+
+If you'd like to know more about how this library works feel free to study the source code yourself!
