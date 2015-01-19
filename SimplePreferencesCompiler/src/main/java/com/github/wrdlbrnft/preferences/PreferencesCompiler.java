@@ -9,10 +9,7 @@ import com.github.wrdlbrnft.processorutils.builder.api.elements.Variable;
 import com.github.wrdlbrnft.processorutils.builder.impl.ClassBuilder;
 import com.github.wrdlbrnft.processorutils.builder.impl.Types;
 import com.github.wrdlbrnft.processorutils.builder.impl.VariableGenerator;
-import com.github.wrdlbrnft.processorutils.utils.Utils;
-import com.squareup.javawriter.JavaWriter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -24,19 +21,37 @@ import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
+
+import sun.reflect.annotation.AnnotationSupport;
 
 public class PreferencesCompiler extends AbstractProcessor {
 
     private static final Class<?>[] CLASSES = new Class[]{
             int.class, boolean.class, long.class, float.class, String.class, void.class
+    };
+
+    private static final String ANNOTATION_DEFAULT_STRING_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultStringValue";
+    private static final String ANNOTATION_DEFAULT_BOOLEAN_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultBooleanValue";
+    private static final String ANNOTATION_DEFAULT_FLOAT_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultFloatValue";
+    private static final String ANNOTATION_DEFAULT_INTEGER_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultIntegerValue";
+    private static final String ANNOTATION_DEFAULT_LONG_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultLongValue";
+
+    private static final String[] DEFAULT_VALUE_ANNOTATIONS = new String[] {
+            ANNOTATION_DEFAULT_STRING_VALUE,
+            ANNOTATION_DEFAULT_BOOLEAN_VALUE,
+            ANNOTATION_DEFAULT_FLOAT_VALUE,
+            ANNOTATION_DEFAULT_INTEGER_VALUE,
+            ANNOTATION_DEFAULT_LONG_VALUE
     };
 
     @Override
@@ -101,7 +116,7 @@ public class PreferencesCompiler extends AbstractProcessor {
                                 final String operator = name.substring(0, 3);
                                 final String key = name.substring(3, name.length());
                                 final GetterSetterPair pair;
-                                if(!pairMap.containsKey(key)) {
+                                if (!pairMap.containsKey(key)) {
                                     pair = new GetterSetterPair();
                                     pairMap.put(key, pair);
                                 } else {
@@ -126,7 +141,7 @@ public class PreferencesCompiler extends AbstractProcessor {
                                             if (parameter.getKind() == ElementKind.PARAMETER) {
                                                 final Type parameterType = Types.create(parameter.asType());
 
-                                                if(parameterType == null) {
+                                                if (parameterType == null) {
                                                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Parameter Type is null!", method);
                                                 }
 
@@ -147,37 +162,65 @@ public class PreferencesCompiler extends AbstractProcessor {
 
                                     @Override
                                     public void writeBody(CodeBlock code, VariableGenerator generator) {
-                                        if(operator.equalsIgnoreCase("get")) {
-                                            if(returnType == Types.Primitives.VOID) {
+                                        if (operator.equalsIgnoreCase("get")) {
+                                            if (returnType == Types.Primitives.VOID) {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Method " + name + " is a getter but has a return type of void!");
                                             }
 
-                                            if(parameter != null) {
+                                            if (parameter != null) {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Method " + name + " is not a valid getter since it also has a parameter!");
                                             }
 
                                             pair.setGetter(method, returnType);
 
-                                            if(returnType.equals(Types.STRING)) {
-                                                code.append("return ").append(fieldPreferences).append(".getString(\"").append(key).append("\", null)");
-                                            } else if(returnType.equals(Types.Primitives.BOOLEAN)) {
-                                                code.append("return ").append(fieldPreferences).append(".getBoolean(\"").append(key).append("\", false)");
-                                            } else if(returnType.equals(Types.Primitives.INT)) {
-                                                code.append("return ").append(fieldPreferences).append(".getInt(\"").append(key).append("\", 0)");
-                                            } else if(returnType.equals(Types.Primitives.FLOAT)) {
-                                                code.append("return ").append(fieldPreferences).append(".getFloat(\"").append(key).append("\", 0.0f)");
-                                            } else if(returnType.equals(Types.Primitives.LONG)) {
-                                                code.append("return ").append(fieldPreferences).append(".getLong(\"").append(key).append("\", 0l)");
+                                            final boolean hasDefaultValue = hasDefaultValueAnnotation(method);
+
+                                            if (returnType.equals(Types.STRING)) {
+                                                String defaultValue = null;
+                                                if(hasDefaultValue) {
+                                                    defaultValue = (String) getDefaultValue(method, ANNOTATION_DEFAULT_STRING_VALUE);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getString(\"").append(key).append("\", ");
+                                                if(defaultValue == null) {
+                                                    code.append("null");
+                                                } else {
+                                                    code.append("\"").append(defaultValue).append("\"");
+                                                }
+                                                code.append(")");
+                                            } else if (returnType.equals(Types.Primitives.BOOLEAN)) {
+                                                boolean defaultValue = false;
+                                                if(hasDefaultValue) {
+                                                    defaultValue = (Boolean) getDefaultValue(method, ANNOTATION_DEFAULT_BOOLEAN_VALUE);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getBoolean(\"").append(key).append("\", " + String.valueOf(defaultValue) + ")");
+                                            } else if (returnType.equals(Types.Primitives.INT)) {
+                                                int defaultValue = 0;
+                                                if(hasDefaultValue) {
+                                                    defaultValue = (Integer) getDefaultValue(method, ANNOTATION_DEFAULT_INTEGER_VALUE);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getInt(\"").append(key).append("\", " + String.valueOf(defaultValue) + ")");
+                                            } else if (returnType.equals(Types.Primitives.FLOAT)) {
+                                                float defaultValue = 0.0f;
+                                                if(hasDefaultValue) {
+                                                    defaultValue = (Float) getDefaultValue(method, ANNOTATION_DEFAULT_FLOAT_VALUE);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getFloat(\"").append(key).append("\", ").append(String.valueOf(defaultValue)).append("f)");
+                                            } else if (returnType.equals(Types.Primitives.LONG)) {
+                                                long defaultValue = 0l;
+                                                if(hasDefaultValue) {
+                                                    defaultValue = (Long) getDefaultValue(method, ANNOTATION_DEFAULT_LONG_VALUE);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getLong(\"").append(key).append("\", ").append(String.valueOf(defaultValue)).append("l)");
                                             } else {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Method " + name + " could not be implemented. Return type could not be parsed even though it is of a valid type!");
                                             }
 
                                         } else if (operator.equalsIgnoreCase("set")) {
-                                            if(returnType != Types.Primitives.VOID) {
+                                            if (returnType != Types.Primitives.VOID) {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Method " + name + " is a setter but it returns a value!");
                                             }
 
-                                            if(parameter == null) {
+                                            if (parameter == null) {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Method " + name + " is not a valid setter since it has no parameter!");
                                             }
 
@@ -185,15 +228,19 @@ public class PreferencesCompiler extends AbstractProcessor {
 
                                             pair.setSetter(method, type);
 
-                                            if(type.equals(Types.STRING)) {
+                                            if(hasDefaultValueAnnotation(method)) {
+                                                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid annotation found! You can only annotate getter methods with default value annotations!", method);
+                                            }
+
+                                            if (type.equals(Types.STRING)) {
                                                 code.append(fieldPreferences).append(".edit().putString(\"").append(key).append("\", ").append(parameter).append(").commit()");
-                                            } else if(type.equals(Types.Primitives.BOOLEAN)) {
+                                            } else if (type.equals(Types.Primitives.BOOLEAN)) {
                                                 code.append(fieldPreferences).append(".edit().putBoolean(\"").append(key).append("\", ").append(parameter).append(").commit()");
-                                            } else if(type.equals(Types.Primitives.INT)) {
+                                            } else if (type.equals(Types.Primitives.INT)) {
                                                 code.append(fieldPreferences).append(".edit().putInt(\"").append(key).append("\", ").append(parameter).append(").commit()");
-                                            } else if(type.equals(Types.Primitives.FLOAT)) {
+                                            } else if (type.equals(Types.Primitives.FLOAT)) {
                                                 code.append(fieldPreferences).append(".edit().putFloat(\"").append(key).append("\", ").append(parameter).append(").commit()");
-                                            } else if(type.equals(Types.Primitives.LONG)) {
+                                            } else if (type.equals(Types.Primitives.LONG)) {
                                                 code.append(fieldPreferences).append(".edit().putLong(\"").append(key).append("\", ").append(parameter).append(").commit()");
                                             }
 
@@ -205,7 +252,7 @@ public class PreferencesCompiler extends AbstractProcessor {
                             }
                         }
 
-                        for(GetterSetterPair pair : pairMap.values()) {
+                        for (GetterSetterPair pair : pairMap.values()) {
                             switch (pair.checkIt()) {
 
                                 case OK:
@@ -216,11 +263,11 @@ public class PreferencesCompiler extends AbstractProcessor {
                                     break;
 
                                 case NO_GETTER:
-                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No corresponding getter could be found for " + pair.setterElement.getSimpleName() + "! Check your spelling or add a valid getter!" , pair.setterElement);
+                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No corresponding getter could be found for " + pair.setterElement.getSimpleName() + "! Check your spelling or add a valid getter!", pair.setterElement);
                                     break;
 
                                 case NO_SETTER:
-                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No corresponding setter could be found for " + pair.getterElement.getSimpleName() + "! Check your spelling or add a valid setter!" , pair.getterElement);
+                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No corresponding setter could be found for " + pair.getterElement.getSimpleName() + "! Check your spelling or add a valid setter!", pair.getterElement);
                                     break;
                             }
                         }
@@ -234,6 +281,59 @@ public class PreferencesCompiler extends AbstractProcessor {
             }
         }
         return false;
+    }
+    private Object getDefaultValue(ExecutableElement method, String annotationClassName) {
+        final List<? extends AnnotationMirror> annotationMirrors = method.getAnnotationMirrors();
+        Object value = null;
+        for(AnnotationMirror mirror : annotationMirrors) {
+            final DeclaredType declaredType = mirror.getAnnotationType();
+            if(annotationClassName.equals(declaredType.toString())) {
+                AnnotationValue annotationValue = new ArrayList<>(mirror.getElementValues().values()).get(0);
+                value = annotationValue.getValue();
+                continue;
+            }
+            for(String className : DEFAULT_VALUE_ANNOTATIONS) {
+                if(className.equals(declaredType.toString())) {
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid annotation found! This method can only be annotated with @" + annotationClassName, method);
+                }
+            }
+        }
+        return value;
+    }
+
+    private boolean hasDefaultValueAnnotation(ExecutableElement method) {
+        final List<? extends AnnotationMirror> annotationMirrors = method.getAnnotationMirrors();
+        for(AnnotationMirror mirror : annotationMirrors) {
+            final DeclaredType declaredType = mirror.getAnnotationType();
+            for(String className : DEFAULT_VALUE_ANNOTATIONS) {
+                if(className.equals(declaredType.toString())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static class AnnotationSet {
+
+        private final Set<Type> annotations;
+
+        private AnnotationSet(Set<Type> annotations) {
+            this.annotations = annotations;
+        }
+
+        public boolean contains(Type annotation) {
+            for (Type type : annotations) {
+                if (type.equals(annotation)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public int size() {
+            return annotations.size();
+        }
     }
 
     private static class GetterSetterPair {
@@ -261,15 +361,15 @@ public class PreferencesCompiler extends AbstractProcessor {
         }
 
         public Status checkIt() {
-            if(getterType == null) {
+            if (getterType == null) {
                 return Status.NO_GETTER;
             }
 
-            if(setterType == null) {
+            if (setterType == null) {
                 return Status.NO_SETTER;
             }
 
-            if(!getterType.equals(setterType)) {
+            if (!getterType.equals(setterType)) {
                 return Status.TYPE_MISMATCH;
             }
 
@@ -278,7 +378,7 @@ public class PreferencesCompiler extends AbstractProcessor {
     }
 
     private boolean isValidType(Type type) {
-        if(type == Types.Primitives.VOID) {
+        if (type == Types.Primitives.VOID) {
             return true;
         }
 
