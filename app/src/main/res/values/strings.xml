@@ -7,6 +7,6 @@
     <string name="button_increment">Increment!</string>
     <string name="hint_persist">The text entered here is persisted!</string>
 
-    <string name="preferences_default_text">Asdf Jklö!!1</string>
+    <string name="localized_default_text">Asdf Jklö!!1</string>
 
 </resources>

@@ -13,7 +13,7 @@ import com.github.wrdlbrnft.simplepreferences.api.Preferences;
 public interface ExamplePreferences {
 
     public void setText(String name);
-    @DefaultResourceValue(R.string.preferences_default_text)
+    @DefaultResourceValue(R.string.localized_default_text)
     public String getText();
 
     public void setCount(int count);
