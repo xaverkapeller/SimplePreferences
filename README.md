@@ -44,6 +44,25 @@ But beware! At the moment only a few primitive types and `String` are supported!
  - `float`
  - `String`
  
+You can easily set a default value by annotating the getters in your interface with one of these annotations:
+
+ - `@DefaultStringValue`
+ - `@DefaultIntegerValue`
+ - `@DefaultLongValue`
+ - `@DefaultBooleanValue`
+ - `@DefaultFloatValue`
+ 
+```java
+@DefaultStringValue("Some default text")
+public String getText();
+```
+
+You can also use `@DefaultResourceValue` to set some localized text as default value.
+```java
+@DefaultResourceValue(R.string.localized_text)
+public String getText();
+```
+ 
 By default every interface will use its own `SharedPreferences` instance, but you can pass a custom preferences name or even a whole `SharedPreferences` instance into the `PreferencesFactory` if you want.
 
 Installation
