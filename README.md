@@ -29,7 +29,7 @@ ExamplePreferences preferences = PreferencesFactory.create(ExamplePreferences.cl
 The rest is handled by the library, you can just use the getters and setters like you normally would:
 
 ```java
-String name = preferences.getText();
+String text = preferences.getText();
 preferences.setText(someOtherText);
 
 int count = preferences.getCount();
@@ -148,8 +148,13 @@ The module SimplePreferencesCompiler is implementing an annotation processor. Th
 @Preferences
 public interface ExamplePreferences {
 
-    public void setSomeValue(String name);
-    public String getSomeValue();
+    public void setText(String name);
+    @DefaultResourceValue(R.string.localized_default_text)
+    public String getText();
+
+    public void setCount(int count);
+    @DefaultIntegerValue(27)
+    public int getCount();
 }
 ```
 
@@ -158,14 +163,22 @@ The annotation processor would generate an implementation that looks something l
 ```java
 public final class ExamplePreferences$$Impl implements ExamplePreferences {
   private final android.content.SharedPreferences _a;
-  public ExamplePreferences$$Impl(android.content.SharedPreferences a) {
+  private final android.content.Context _b;
+  public ExamplePreferences$$Impl(android.content.SharedPreferences a, android.content.Context b) {
     _a = a;
+    _b = b;
   }
-  public void setSomeValue(String a) {
-    _a.edit().putString("SomeValue", a).commit();
+  public int getCount() {
+    return _a.getInt("Count", 27);
   }
-  public String getSomeValue() {
-    return _a.getString("SomeValue", null);
+  public void setText(String a) {
+    _a.edit().putString("Text", a).commit();
+  }
+  public void setCount(int a) {
+    _a.edit().putInt("Count", a).commit();
+  }
+  public String getText() {
+    return _a.getString("Text", _b.getString(2131361813));
   }
 }
 ```
@@ -175,7 +188,7 @@ As you can see the name of the getter and setter methods is used as a key! So be
 ```java
 final String implName = interfaceClass.getName() + "$$Impl";
 final Class<?> implClass = Class.forName(implName);
-T instance = (T) implClass.getConstructor(SharedPreferences.class).newInstance(sharedPreferences);
+T instance = (T) implClass.getConstructor(SharedPreferences.class, Context.class).newInstance(sharedPreferences, context);
 ```
 
 If you'd like to know more about how this library works feel free to study the source code yourself!
