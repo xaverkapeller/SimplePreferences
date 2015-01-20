@@ -1,6 +1,7 @@
 package at.github.simplepreferences;
 
 import com.github.wrdlbrnft.simplepreferences.api.DefaultIntegerValue;
+import com.github.wrdlbrnft.simplepreferences.api.DefaultResourceValue;
 import com.github.wrdlbrnft.simplepreferences.api.Preferences;
 
 /**
@@ -12,7 +13,7 @@ import com.github.wrdlbrnft.simplepreferences.api.Preferences;
 public interface ExamplePreferences {
 
     public void setText(String name);
-    @DefaultIntegerValue(27)
+    @DefaultResourceValue(R.string.preferences_default_text)
     public String getText();
 
     public void setCount(int count);

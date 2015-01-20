@@ -22,7 +22,6 @@ import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -31,8 +30,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.tools.Diagnostic;
-
-import sun.reflect.annotation.AnnotationSupport;
 
 public class PreferencesCompiler extends AbstractProcessor {
 
@@ -45,8 +42,58 @@ public class PreferencesCompiler extends AbstractProcessor {
     private static final String ANNOTATION_DEFAULT_FLOAT_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultFloatValue";
     private static final String ANNOTATION_DEFAULT_INTEGER_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultIntegerValue";
     private static final String ANNOTATION_DEFAULT_LONG_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultLongValue";
+    private static final String ANNOTATION_DEFAULT_RESOURCE_VALUE = "com.github.wrdlbrnft.simplepreferences.api.DefaultResourceValue";
 
-    private static final String[] DEFAULT_VALUE_ANNOTATIONS = new String[] {
+    private static final String[] ANNOTATIONS = new String[]{
+            ANNOTATION_DEFAULT_STRING_VALUE,
+            ANNOTATION_DEFAULT_BOOLEAN_VALUE,
+            ANNOTATION_DEFAULT_FLOAT_VALUE,
+            ANNOTATION_DEFAULT_INTEGER_VALUE,
+            ANNOTATION_DEFAULT_LONG_VALUE,
+            ANNOTATION_DEFAULT_RESOURCE_VALUE
+    };
+
+    private static final String[] STRING_BLACKLIST = new String[] {
+            ANNOTATION_DEFAULT_BOOLEAN_VALUE,
+            ANNOTATION_DEFAULT_FLOAT_VALUE,
+            ANNOTATION_DEFAULT_INTEGER_VALUE,
+            ANNOTATION_DEFAULT_LONG_VALUE,
+            ANNOTATION_DEFAULT_RESOURCE_VALUE
+    };
+
+    private static final String[] INTEGER_BLACKLIST = new String[] {
+            ANNOTATION_DEFAULT_STRING_VALUE,
+            ANNOTATION_DEFAULT_BOOLEAN_VALUE,
+            ANNOTATION_DEFAULT_FLOAT_VALUE,
+            ANNOTATION_DEFAULT_LONG_VALUE,
+            ANNOTATION_DEFAULT_RESOURCE_VALUE
+    };
+
+    private static final String[] BOOLEAN_BLACKLIST = new String[] {
+            ANNOTATION_DEFAULT_STRING_VALUE,
+            ANNOTATION_DEFAULT_FLOAT_VALUE,
+            ANNOTATION_DEFAULT_INTEGER_VALUE,
+            ANNOTATION_DEFAULT_LONG_VALUE,
+            ANNOTATION_DEFAULT_RESOURCE_VALUE
+    };
+
+    private static final String[] FLOAT_BLACKLIST = new String[] {
+            ANNOTATION_DEFAULT_STRING_VALUE,
+            ANNOTATION_DEFAULT_BOOLEAN_VALUE,
+            ANNOTATION_DEFAULT_INTEGER_VALUE,
+            ANNOTATION_DEFAULT_LONG_VALUE,
+            ANNOTATION_DEFAULT_RESOURCE_VALUE
+    };
+
+    private static final String[] LONG_BLACKLIST = new String[] {
+            ANNOTATION_DEFAULT_STRING_VALUE,
+            ANNOTATION_DEFAULT_BOOLEAN_VALUE,
+            ANNOTATION_DEFAULT_FLOAT_VALUE,
+            ANNOTATION_DEFAULT_INTEGER_VALUE,
+            ANNOTATION_DEFAULT_RESOURCE_VALUE
+    };
+
+    private static final String[] RESOURCE_BLACKLIST = new String[] {
             ANNOTATION_DEFAULT_STRING_VALUE,
             ANNOTATION_DEFAULT_BOOLEAN_VALUE,
             ANNOTATION_DEFAULT_FLOAT_VALUE,
@@ -74,31 +121,35 @@ public class PreferencesCompiler extends AbstractProcessor {
                         builder.setImplements(new HashSet<Type>(Arrays.asList(interfaceType)));
                         builder.setModifiers(EnumSet.of(Modifier.PUBLIC, Modifier.FINAL));
 
+                        final Field fieldContext = builder.addField(Types.Android.CONTEXT, EnumSet.of(Modifier.PRIVATE, Modifier.FINAL));
                         final Field fieldPreferences = builder.addField(Types.Android.SHARED_PREFERENCES, EnumSet.of(Modifier.PRIVATE, Modifier.FINAL));
 
                         final Constructor constructor = builder.addConstructor(EnumSet.of(Modifier.PUBLIC), new ExecutableBuilder() {
 
                             private Variable paramPreferences;
+                            private Variable paramContext;
 
                             @Override
                             public Set<Variable> createParameterSet(VariableGenerator generator) {
                                 final Set<Variable> parameters = new HashSet<Variable>();
 
                                 parameters.add(paramPreferences = generator.generate(Types.Android.SHARED_PREFERENCES));
+                                parameters.add(paramContext = generator.generate(Types.Android.CONTEXT));
 
                                 return parameters;
                             }
 
                             @Override
                             public void writeBody(CodeBlock code, VariableGenerator generator) {
-                                code.append(fieldPreferences.set(paramPreferences));
+                                code.append(fieldPreferences.set(paramPreferences)).append(";\n");
+                                code.append(fieldContext.set(paramContext));
                             }
                         });
 
                         final Map<String, GetterSetterPair> pairMap = new HashMap<>();
 
                         final List<? extends Element> members = typeElement.getEnclosedElements();
-                        for (Element member : members) {
+                        for (final Element member : members) {
                             if (member.getKind() == ElementKind.METHOD) {
                                 final ExecutableElement method = (ExecutableElement) member;
 
@@ -173,44 +224,80 @@ public class PreferencesCompiler extends AbstractProcessor {
 
                                             pair.setGetter(method, returnType);
 
-                                            final boolean hasDefaultValue = hasDefaultValueAnnotation(method);
-
                                             if (returnType.equals(Types.STRING)) {
-                                                String defaultValue = null;
-                                                if(hasDefaultValue) {
-                                                    defaultValue = (String) getDefaultValue(method, ANNOTATION_DEFAULT_STRING_VALUE);
-                                                }
                                                 code.append("return ").append(fieldPreferences).append(".getString(\"").append(key).append("\", ");
-                                                if(defaultValue == null) {
-                                                    code.append("null");
+                                                AnnotationMirror mirror;
+                                                if ((mirror = getAnnotation(method, ANNOTATION_DEFAULT_STRING_VALUE)) != null) {
+                                                    if(hasOneAnnotationOf(method, STRING_BLACKLIST)) {
+                                                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
+                                                    }
+                                                    String defaultValue = (String) new ArrayList<>(mirror.getElementValues().values()).get(0).getValue();
+                                                    if (defaultValue == null) {
+                                                        code.append("null");
+                                                    } else {
+                                                        code.append("\"").append(defaultValue).append("\"");
+                                                    }
+                                                } else if ((mirror = getAnnotation(method, ANNOTATION_DEFAULT_RESOURCE_VALUE)) != null) {
+                                                    if(hasOneAnnotationOf(method, RESOURCE_BLACKLIST)) {
+                                                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
+                                                    }
+                                                    int resId = (Integer) new ArrayList<>(mirror.getElementValues().values()).get(0).getValue();
+                                                    code.append(fieldContext).append(".getString(").append(resId).append(")");
                                                 } else {
-                                                    code.append("\"").append(defaultValue).append("\"");
+                                                    if(hasOneAnnotationOf(method, STRING_BLACKLIST)) {
+                                                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
+                                                    }
+                                                    code.append("null");
                                                 }
                                                 code.append(")");
                                             } else if (returnType.equals(Types.Primitives.BOOLEAN)) {
+                                                if(hasOneAnnotationOf(method, BOOLEAN_BLACKLIST)) {
+                                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getBoolean(\"").append(key).append("\", ");
                                                 boolean defaultValue = false;
-                                                if(hasDefaultValue) {
-                                                    defaultValue = (Boolean) getDefaultValue(method, ANNOTATION_DEFAULT_BOOLEAN_VALUE);
+                                                AnnotationMirror mirror;
+                                                if ((mirror = getAnnotation(method, ANNOTATION_DEFAULT_BOOLEAN_VALUE)) != null) {
+                                                    defaultValue = (Boolean) new ArrayList<>(mirror.getElementValues().values()).get(0).getValue();
                                                 }
-                                                code.append("return ").append(fieldPreferences).append(".getBoolean(\"").append(key).append("\", " + String.valueOf(defaultValue) + ")");
+                                                code.append(defaultValue);
+                                                code.append(")");
                                             } else if (returnType.equals(Types.Primitives.INT)) {
+                                                if(hasOneAnnotationOf(method, INTEGER_BLACKLIST)) {
+                                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getInt(\"").append(key).append("\", ");
                                                 int defaultValue = 0;
-                                                if(hasDefaultValue) {
-                                                    defaultValue = (Integer) getDefaultValue(method, ANNOTATION_DEFAULT_INTEGER_VALUE);
+                                                AnnotationMirror mirror;
+                                                if ((mirror = getAnnotation(method, ANNOTATION_DEFAULT_INTEGER_VALUE)) != null) {
+                                                    defaultValue = (Integer) new ArrayList<>(mirror.getElementValues().values()).get(0).getValue();
                                                 }
-                                                code.append("return ").append(fieldPreferences).append(".getInt(\"").append(key).append("\", " + String.valueOf(defaultValue) + ")");
+                                                code.append(defaultValue);
+                                                code.append(")");
                                             } else if (returnType.equals(Types.Primitives.FLOAT)) {
+                                                if(hasOneAnnotationOf(method, FLOAT_BLACKLIST)) {
+                                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
+                                                }
+                                                code.append("return ").append(fieldPreferences).append(".getFloat(\"").append(key).append("\", ");
                                                 float defaultValue = 0.0f;
-                                                if(hasDefaultValue) {
-                                                    defaultValue = (Float) getDefaultValue(method, ANNOTATION_DEFAULT_FLOAT_VALUE);
+                                                AnnotationMirror mirror;
+                                                if ((mirror = getAnnotation(method, ANNOTATION_DEFAULT_FLOAT_VALUE)) != null) {
+                                                    defaultValue = (Integer) new ArrayList<>(mirror.getElementValues().values()).get(0).getValue();
                                                 }
-                                                code.append("return ").append(fieldPreferences).append(".getFloat(\"").append(key).append("\", ").append(String.valueOf(defaultValue)).append("f)");
+                                                code.append(defaultValue);
+                                                code.append("f)");
                                             } else if (returnType.equals(Types.Primitives.LONG)) {
-                                                long defaultValue = 0l;
-                                                if(hasDefaultValue) {
-                                                    defaultValue = (Long) getDefaultValue(method, ANNOTATION_DEFAULT_LONG_VALUE);
+                                                if(hasOneAnnotationOf(method, LONG_BLACKLIST)) {
+                                                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
                                                 }
-                                                code.append("return ").append(fieldPreferences).append(".getLong(\"").append(key).append("\", ").append(String.valueOf(defaultValue)).append("l)");
+                                                code.append("return ").append(fieldPreferences).append(".getLong(\"").append(key).append("\", ");
+                                                long defaultValue = 0l;
+                                                AnnotationMirror mirror;
+                                                if ((mirror = getAnnotation(method, ANNOTATION_DEFAULT_LONG_VALUE)) != null) {
+                                                    defaultValue = (Long) new ArrayList<>(mirror.getElementValues().values()).get(0).getValue();
+                                                }
+                                                code.append(defaultValue);
+                                                code.append("l)");
                                             } else {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Method " + name + " could not be implemented. Return type could not be parsed even though it is of a valid type!");
                                             }
@@ -228,7 +315,7 @@ public class PreferencesCompiler extends AbstractProcessor {
 
                                             pair.setSetter(method, type);
 
-                                            if(hasDefaultValueAnnotation(method)) {
+                                            if (hasOneAnnotationOf(method, ANNOTATIONS)) {
                                                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid annotation found! You can only annotate getter methods with default value annotations!", method);
                                             }
 
@@ -282,31 +369,14 @@ public class PreferencesCompiler extends AbstractProcessor {
         }
         return false;
     }
-    private Object getDefaultValue(ExecutableElement method, String annotationClassName) {
-        final List<? extends AnnotationMirror> annotationMirrors = method.getAnnotationMirrors();
-        Object value = null;
-        for(AnnotationMirror mirror : annotationMirrors) {
-            final DeclaredType declaredType = mirror.getAnnotationType();
-            if(annotationClassName.equals(declaredType.toString())) {
-                AnnotationValue annotationValue = new ArrayList<>(mirror.getElementValues().values()).get(0);
-                value = annotationValue.getValue();
-                continue;
-            }
-            for(String className : DEFAULT_VALUE_ANNOTATIONS) {
-                if(className.equals(declaredType.toString())) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid annotation found! This method can only be annotated with @" + annotationClassName, method);
-                }
-            }
-        }
-        return value;
-    }
 
-    private boolean hasDefaultValueAnnotation(ExecutableElement method) {
+    private boolean hasOneAnnotationOf(ExecutableElement method, String[] annotations) {
         final List<? extends AnnotationMirror> annotationMirrors = method.getAnnotationMirrors();
-        for(AnnotationMirror mirror : annotationMirrors) {
+        for (AnnotationMirror mirror : annotationMirrors) {
             final DeclaredType declaredType = mirror.getAnnotationType();
-            for(String className : DEFAULT_VALUE_ANNOTATIONS) {
-                if(className.equals(declaredType.toString())) {
+            final String annotation = declaredType.toString();
+            for (String className : annotations) {
+                if (className.equals(annotation)) {
                     return true;
                 }
             }
@@ -314,26 +384,16 @@ public class PreferencesCompiler extends AbstractProcessor {
         return false;
     }
 
-    private static class AnnotationSet {
-
-        private final Set<Type> annotations;
-
-        private AnnotationSet(Set<Type> annotations) {
-            this.annotations = annotations;
-        }
-
-        public boolean contains(Type annotation) {
-            for (Type type : annotations) {
-                if (type.equals(annotation)) {
-                    return true;
-                }
+    private AnnotationMirror getAnnotation(ExecutableElement method, String annotationClassName) {
+        final List<? extends AnnotationMirror> annotationMirrors = method.getAnnotationMirrors();
+        for (AnnotationMirror mirror : annotationMirrors) {
+            final DeclaredType declaredType = mirror.getAnnotationType();
+            final String annotation = declaredType.toString();
+            if (annotation.equals(annotationClassName)) {
+                return mirror;
             }
-            return false;
         }
-
-        public int size() {
-            return annotations.size();
-        }
+        return null;
     }
 
     private static class GetterSetterPair {

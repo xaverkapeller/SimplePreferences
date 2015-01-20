@@ -19,10 +19,10 @@ public class PreferencesFactory {
 
     public static <T> T create(Class<T> cls, Context context, String preferencesName) {
         final SharedPreferences preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE);
-        return create(cls, preferences);
+        return create(cls, context, preferences);
     }
 
-    public static <T> T create(Class<T> cls, SharedPreferences preferences) {
+    public static <T> T create(Class<T> cls, Context context, SharedPreferences preferences) {
         if (!cls.isInterface()) {
             throw new IllegalStateException("The class " + cls + " is not an interface!");
         }
@@ -30,7 +30,7 @@ public class PreferencesFactory {
         try {
             final String implName = cls.getName() + "$$Impl";
             final Class<?> implClass = Class.forName(implName);
-            return (T) implClass.<SharedPreferences>getConstructor(SharedPreferences.class).<T>newInstance(preferences);
+            return (T) implClass.<SharedPreferences>getConstructor(SharedPreferences.class, Context.class).<T>newInstance(preferences, context);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("Implementation of " + cls.getName() + " could not be found!");
         } catch (InstantiationException e) {
