@@ -12,7 +12,7 @@ Just create an interface like this with all the getters and setters for the pref
 @Preferences
 public interface ExamplePreferences {
 
-    public void setText(String name);
+    public void setText(String text);
     public String getText();
 
     public void setCount(int count);
