@@ -139,6 +139,17 @@ dependencies {
 
 After that you are all set! Just annotate your preference interfaces with `@Preferences` and you are good to go!
 
+Proguard
+------
+
+If you use proguard you need to add these three rules to your proguard file:
+
+```
+-keep class **$$Impl { *; }
+-keep class com.github.wrdlbrnft.simplepreferences.** { *; }
+-keep @com.github.wrdlbrnft.simplepreferences.api.Preferences public class * { *; }
+```
+
 How it works
 ------
 
