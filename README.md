@@ -68,7 +68,7 @@ By default every interface will use its own `SharedPreferences` instance, but yo
 Installation
 --------
 
- **1)** Just download this library and add the three modules SimplePreferences, ProcessorUtils and SimplePreferencesCompiler to your Android project.
+ **1)** Just download this library and add the two modules SimplePreferences and SimplePreferencesCompiler to your Android project.
 
  **2)** The top of the build.gradle file of your app needs to look like this:
 
