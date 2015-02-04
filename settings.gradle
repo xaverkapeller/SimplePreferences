@@ -1,1 +1,1 @@
-include ':app', ':SimplePreferences', ':ProcessorUtils', ':SimplePreferencesCompiler'
+include ':app', ':SimplePreferences', ':SimplePreferencesCompiler'

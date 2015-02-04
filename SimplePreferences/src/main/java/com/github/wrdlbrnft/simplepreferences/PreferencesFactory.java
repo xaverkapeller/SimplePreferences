@@ -30,7 +30,7 @@ public class PreferencesFactory {
         try {
             final String implName = cls.getName() + "$$Impl";
             final Class<?> implClass = Class.forName(implName);
-            return (T) implClass.<SharedPreferences>getConstructor(SharedPreferences.class, Context.class).<T>newInstance(preferences, context);
+            return (T) implClass.<SharedPreferences>getConstructor(Context.class, SharedPreferences.class).<T>newInstance(context, preferences);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("Implementation of " + cls.getName() + " could not be found!");
         } catch (InstantiationException e) {

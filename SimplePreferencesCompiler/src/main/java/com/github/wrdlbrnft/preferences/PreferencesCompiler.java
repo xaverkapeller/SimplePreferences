@@ -1,14 +1,14 @@
 package com.github.wrdlbrnft.preferences;
 
-import com.github.wrdlbrnft.processorutils.builder.api.builder.ExecutableBuilder;
-import com.github.wrdlbrnft.processorutils.builder.api.code.CodeBlock;
-import com.github.wrdlbrnft.processorutils.builder.api.elements.Constructor;
-import com.github.wrdlbrnft.processorutils.builder.api.elements.Field;
-import com.github.wrdlbrnft.processorutils.builder.api.elements.Type;
-import com.github.wrdlbrnft.processorutils.builder.api.elements.Variable;
-import com.github.wrdlbrnft.processorutils.builder.impl.ClassBuilder;
-import com.github.wrdlbrnft.processorutils.builder.impl.Types;
-import com.github.wrdlbrnft.processorutils.builder.impl.VariableGenerator;
+import com.github.wrdlbrnft.preferences.builder.api.builder.ExecutableBuilder;
+import com.github.wrdlbrnft.preferences.builder.api.code.CodeBlock;
+import com.github.wrdlbrnft.preferences.builder.api.elements.Constructor;
+import com.github.wrdlbrnft.preferences.builder.api.elements.Field;
+import com.github.wrdlbrnft.preferences.builder.api.elements.Type;
+import com.github.wrdlbrnft.preferences.builder.api.elements.Variable;
+import com.github.wrdlbrnft.preferences.builder.impl.ClassBuilder;
+import com.github.wrdlbrnft.preferences.builder.impl.Types;
+import com.github.wrdlbrnft.preferences.builder.impl.VariableGenerator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -130,11 +130,11 @@ public class PreferencesCompiler extends AbstractProcessor {
                             private Variable paramContext;
 
                             @Override
-                            public Set<Variable> createParameterSet(VariableGenerator generator) {
-                                final Set<Variable> parameters = new HashSet<Variable>();
+                            public List<Variable> createParameterList(VariableGenerator generator) {
+                                final List<Variable> parameters = new ArrayList<Variable>();
 
-                                parameters.add(paramPreferences = generator.generate(Types.Android.SHARED_PREFERENCES));
                                 parameters.add(paramContext = generator.generate(Types.Android.CONTEXT));
+                                parameters.add(paramPreferences = generator.generate(Types.Android.SHARED_PREFERENCES));
 
                                 return parameters;
                             }
@@ -179,8 +179,8 @@ public class PreferencesCompiler extends AbstractProcessor {
                                     private Variable parameter;
 
                                     @Override
-                                    public Set<Variable> createParameterSet(VariableGenerator generator) {
-                                        final Set<Variable> params = new HashSet<Variable>();
+                                    public List<Variable> createParameterList(VariableGenerator generator) {
+                                        final List<Variable> params = new ArrayList<Variable>();
 
                                         final List<? extends VariableElement> methodParameters = method.getParameters();
                                         if (methodParameters.size() > 1) {
@@ -262,7 +262,7 @@ public class PreferencesCompiler extends AbstractProcessor {
                                                 }
                                                 code.append(defaultValue);
                                                 code.append(")");
-                                            } else if (returnType.equals(Types.Primitives.INT)) {
+                                            } else if (returnType.equals(Types.Primitives.INTEGER)) {
                                                 if(hasOneAnnotationOf(method, INTEGER_BLACKLIST)) {
                                                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Invalid default value annotation found!", method);
                                                 }
@@ -323,7 +323,7 @@ public class PreferencesCompiler extends AbstractProcessor {
                                                 code.append(fieldPreferences).append(".edit().putString(\"").append(key).append("\", ").append(parameter).append(").commit()");
                                             } else if (type.equals(Types.Primitives.BOOLEAN)) {
                                                 code.append(fieldPreferences).append(".edit().putBoolean(\"").append(key).append("\", ").append(parameter).append(").commit()");
-                                            } else if (type.equals(Types.Primitives.INT)) {
+                                            } else if (type.equals(Types.Primitives.INTEGER)) {
                                                 code.append(fieldPreferences).append(".edit().putInt(\"").append(key).append("\", ").append(parameter).append(").commit()");
                                             } else if (type.equals(Types.Primitives.FLOAT)) {
                                                 code.append(fieldPreferences).append(".edit().putFloat(\"").append(key).append("\", ").append(parameter).append(").commit()");

@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ProcessorUtils/ProcessorUtils.iml" filepath="$PROJECT_DIR$/ProcessorUtils/ProcessorUtils.iml" />
       <module fileurl="file://$PROJECT_DIR$/SimplePreferences.iml" filepath="$PROJECT_DIR$/SimplePreferences.iml" />
       <module fileurl="file://$PROJECT_DIR$/SimplePreferences/SimplePreferences-SimplePreferences.iml" filepath="$PROJECT_DIR$/SimplePreferences/SimplePreferences-SimplePreferences.iml" />
       <module fileurl="file://$PROJECT_DIR$/SimplePreferencesCompiler/SimplePreferencesCompiler.iml" filepath="$PROJECT_DIR$/SimplePreferencesCompiler/SimplePreferencesCompiler.iml" />

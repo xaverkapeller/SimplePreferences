@@ -9,7 +9,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/ProcessorUtils" />
             <option value="$PROJECT_DIR$/SimplePreferences" />
             <option value="$PROJECT_DIR$/SimplePreferencesCompiler" />
             <option value="$PROJECT_DIR$/app" />
