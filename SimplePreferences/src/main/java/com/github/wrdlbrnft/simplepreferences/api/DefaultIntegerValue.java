@@ -6,5 +6,5 @@ package com.github.wrdlbrnft.simplepreferences.api;
  * Date: 19/01/15
  */
 public @interface DefaultIntegerValue {
-    public int value();
+    int value();
 }

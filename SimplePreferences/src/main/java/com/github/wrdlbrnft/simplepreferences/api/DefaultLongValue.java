@@ -6,5 +6,5 @@ package com.github.wrdlbrnft.simplepreferences.api;
  * Date: 19/01/15
  */
 public @interface DefaultLongValue {
-    public long value();
+    long value();
 }

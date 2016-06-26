@@ -6,5 +6,5 @@ package com.github.wrdlbrnft.simplepreferences.api;
  * Date: 20/01/15
  */
 public @interface DefaultResourceValue {
-    public int value();
+    int value();
 }

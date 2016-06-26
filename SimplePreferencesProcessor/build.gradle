@@ -1,30 +1,9 @@
-apply plugin: 'com.android.library'
+apply plugin: 'java'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
-android {
-    compileSdkVersion 24
-    buildToolsVersion '24.0.0'
-
-    defaultConfig {
-        minSdkVersion 9
-        targetSdkVersion 24
-    }
-
-    lintOptions {
-        disable 'InvalidPackage'
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-}
-
 dependencies {
-    compile 'com.android.support:support-annotations:24.0.0'
+    compile 'com.github.wrdlbrnft:code-builder:0.1.0.2'
 }
 
 final bintrayUser = hasProperty('bintray_user') ? property('bintray_user') : ''
@@ -32,7 +11,7 @@ final bintrayApiKey = hasProperty('bintray_api_key') ? property('bintray_api_key
 final versionName = hasProperty('version_name') ? property('version_name') : ''
 
 task sourceJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
+    from sourceSets.main.java.srcDirs
     classifier 'source'
 }
 
@@ -40,10 +19,10 @@ publishing {
     publications {
         Bintray(MavenPublication) {
             groupId 'com.github.wrdlbrnft'
-            artifactId 'simple-preferences'
+            artifactId 'simple-preferences-processor'
             version versionName
             artifact(sourceJar)
-            artifact("$buildDir/outputs/aar/SimplePreferences-release.aar")
+            artifact("$buildDir/libs/SimplePreferencesProcessor.jar")
 
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
@@ -75,7 +54,7 @@ bintray {
     publications = ['Bintray']
     pkg {
         repo = 'maven'
-        name = 'SimplePreferences'
+        name = 'SimplePreferencesProcessor'
         userOrg = bintrayUser
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/Wrdlbrnft/SimplePreferences'
