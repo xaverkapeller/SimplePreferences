@@ -26,11 +26,11 @@ Just create an interface like the one below with all the getters and setters for
 @Preferences
 public interface ExamplePreferences {
 
-    public void setText(String text);
-    public String getText();
+    void setText(String text);
+    String getText();
 
-    public void setCount(int count);
-    public int getCount();
+    void setCount(int count);
+    int getCount();
 }
 ```
 
@@ -68,11 +68,11 @@ You can easily set a default value by annotating the getters in your interface w
  
 ```java
 @DefaultStringValue("Some default text")
-public String getText();
+String getText();
 ```
 
 You can also use `@DefaultResourceValue` to set some localized text as default value.
 ```java
 @DefaultResourceValue(R.string.localized_text)
-public String getText();
+String getText();
 ```
