@@ -1,5 +1,4 @@
 # SimplePreferences
-===========
 
 The preferences you always wanted on Android.
 
