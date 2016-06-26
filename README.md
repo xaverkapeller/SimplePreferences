@@ -1,12 +1,27 @@
-SimplePreferences
+# SimplePreferences
 ===========
 
-SimplePreferences is a library which uses compile time annotation processing to make preferences simple and easy to use.
+The preferences you always wanted on Android.
 
-How to use it
------
+ - **Quick to setup**: You can get started literally as quickly as you can create an interface. As soon as you add SimplePreferences to your project it starts working for you.
+ - **Simplifies your code**: Never deal with SharedPreferences again. SimplePreferences does all the work for you.
+ - **No runtime overhead**: SimplePrefernences uses compile time code generation to generate the boilerplate for your preferences. It runs just as fast as if you had written it yourself without you having to do anything!
+ - **Don't worry about ProGuard**: This library doesn't need any ProGuard rules.
+ 
+## How to add it to your project
 
-Just create an interface like this with all the getters and setters for the preferences you need and then annotate it with `@Preferences`:
+If you are using the Jack compiler just add these two lines to the dependencies closure of your module:
+
+```groovy
+compile 'com.github.wrdlbrnft:simple-preferences:0.1.0.0'
+annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.1.0.0'
+```
+
+If you are not using Jack you can use the android-apt Grade plugin and its apt configuration instead of the `annotationProcessor` configuration.
+
+## How to use it
+
+Just create an interface like the one below with all the getters and setters for the preferences you need and then annotate it with `@Preferences`:
 
 ```java
 @Preferences
@@ -20,13 +35,13 @@ public interface ExamplePreferences {
 }
 ```
 
-You can then create an instance of `ExamplePreferences` by using the `PreferencesFactory`:
+After that SimplePreferences generates a factory class which you can use to create an instance of your preferences interface:
 
 ```java
-ExamplePreferences preferences = PreferencesFactory.create(ExamplePreferences.class, context);
+ExamplePreferences preferences = ExamplePreferencesFactory.newInstance(context);
 ```
 
-The rest is handled by the library, you can just use the getters and setters like you normally would:
+And that's it! You can use the setters and getters and anything you save will be persisted with `SharedPreferences`.
 
 ```java
 String text = preferences.getText();
@@ -62,144 +77,3 @@ You can also use `@DefaultResourceValue` to set some localized text as default v
 @DefaultResourceValue(R.string.localized_text)
 public String getText();
 ```
- 
-By default every interface will use its own `SharedPreferences` instance, but you can pass a custom preferences name or even a whole `SharedPreferences` instance into the `PreferencesFactory` if you want.
-
-Installation
---------
-
- **1)** Just download this library and add the two modules SimplePreferences and SimplePreferencesCompiler to your Android project.
-
- **2)** The top of the build.gradle file of your app needs to look like this:
-
-```
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.+'
-    }
-}
-
-apply plugin: 'com.android.application'
-apply plugin: 'android-apt'
-...
-```
-
- **3)** In the dependencies add these two lines at the bottom:
-
-```
-apt project(':SimplePreferencesCompiler')
-compile project(':SimplePreferences')
-```
-
-The whole build.gradle should then look something like this:
-
-```
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.+'
-    }
-}
-
-apply plugin: 'com.android.application'
-apply plugin: 'android-apt'
-
-android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
-
-    defaultConfig {
-        applicationId "com.example.app"
-        minSdkVersion 11
-        targetSdkVersion 21
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-}
-
-dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:21.0.3'
-
-    apt project(':SimplePreferencesCompiler')
-    compile project(':SimplePreferences')
-}
-```
-
-After that you are all set! Just annotate your preference interfaces with `@Preferences` and you are good to go!
-
-Proguard
-------
-
-If you use proguard you need to add these three rules to your proguard file:
-
-```
--keep class **$$Impl { *; }
--keep class com.github.wrdlbrnft.simplepreferences.** { *; }
--keep @com.github.wrdlbrnft.simplepreferences.api.Preferences public class * { *; }
-```
-
-How it works
-------
-
-The module SimplePreferencesCompiler is implementing an annotation processor. This processor will be executed everytime you compile your project. It will look for interfaces in your source code that have been annotated with the `@Preferences` annotation and if it finds any will generate an approrpirate implementation of those interfaces for you! For example for an interface like this:
-
-```java
-@Preferences
-public interface ExamplePreferences {
-
-    public void setText(String name);
-    @DefaultResourceValue(R.string.localized_default_text)
-    public String getText();
-
-    public void setCount(int count);
-    @DefaultIntegerValue(27)
-    public int getCount();
-}
-```
-
-The annotation processor would generate an implementation that looks something like this:
-
-```java
-public final class ExamplePreferences$$Impl implements ExamplePreferences {
-  private final android.content.SharedPreferences _a;
-  private final android.content.Context _b;
-  public ExamplePreferences$$Impl(android.content.SharedPreferences a, android.content.Context b) {
-    _a = a;
-    _b = b;
-  }
-  public int getCount() {
-    return _a.getInt("Count", 27);
-  }
-  public void setText(String a) {
-    _a.edit().putString("Text", a).commit();
-  }
-  public void setCount(int a) {
-    _a.edit().putInt("Count", a).commit();
-  }
-  public String getText() {
-    return _a.getString("Text", _b.getString(2131361813));
-  }
-}
-```
-
-As you can see the name of the getter and setter methods is used as a key! So be careful when changing the name of those methods. When you use the `PreferencesFactory` to create an instace of your interface it is looking for the implementation at runtime like this:
-
-```java
-final String implName = interfaceClass.getName() + "$$Impl";
-final Class<?> implClass = Class.forName(implName);
-T instance = (T) implClass.getConstructor(SharedPreferences.class, Context.class).newInstance(sharedPreferences, context);
-```
-
-If you'd like to know more about how this library works feel free to study the source code yourself!
