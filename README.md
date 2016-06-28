@@ -5,15 +5,15 @@ The preferences you always wanted on Android.
  - **Quick to setup**: You can get started literally as quickly as you can create an interface. As soon as you add SimplePreferences to your project it starts working for you.
  - **Simplifies your code**: Never deal with SharedPreferences again. SimplePreferences does all the work for you.
  - **No runtime overhead**: SimplePreferences uses compile time code generation to generate the boilerplate for your preferences. It runs just as fast as if you had written it yourself without you having to do anything!
- - **Don't worry about ProGuard**: This library doesn't need any ProGuard rules.
+ - **Don't worry about ProGuard**: SimplePreferences does not require any ProGuard rules.
  
 ## How to add it to your project
 
 If you are using the Jack compiler just add these two lines to the dependencies closure of your module:
 
 ```groovy
-compile 'com.github.wrdlbrnft:simple-preferences:0.1.0.0'
-annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.1.0.0'
+compile 'com.github.wrdlbrnft:simple-preferences:0.1.0.3'
+annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.1.0.3'
 ```
 
 If you are not using Jack you can use the android-apt Grade plugin and its apt configuration instead of the `annotationProcessor` configuration.
