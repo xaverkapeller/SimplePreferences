@@ -82,8 +82,8 @@ public class ImplementationBuilder {
 
                     @Override
                     protected void write(Block block) {
-                        block.set(mFieldContext, paramContext).newLine();
-                        block.set(mFieldPreferences, paramPreferences);
+                        block.set(mFieldContext, paramContext).append(";").newLine();
+                        block.set(mFieldPreferences, paramPreferences).append(";");
                     }
                 })
                 .build();
