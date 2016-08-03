@@ -67,7 +67,7 @@ public class FactoryBuilder {
                                         Values.of(sharedPreferencesName),
                                         Variables.stub(Types.Android.CONTEXT, "Context.MODE_PRIVATE")
                                 )
-                        )).newLine();
+                        )).append(";").newLine();
                         block.append("return ").append(implementationType.newInstance(mParamContext, varPreferences)).append(";");
                     }
                 })
