@@ -12,8 +12,8 @@ The preferences you always wanted on Android.
 If you are using the Jack compiler just add these two lines to the dependencies closure of your module:
 
 ```groovy
-compile 'com.github.wrdlbrnft:simple-preferences:0.1.0.3'
-annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.1.0.3'
+compile 'com.github.wrdlbrnft:simple-preferences:0.1.0.7'
+annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.1.0.7'
 ```
 
 If you are not using Jack you can use the android-apt Grade plugin and its apt configuration instead of the `annotationProcessor` configuration.
