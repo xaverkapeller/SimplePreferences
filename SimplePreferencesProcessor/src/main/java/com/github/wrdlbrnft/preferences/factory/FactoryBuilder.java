@@ -27,7 +27,8 @@ import javax.lang.model.element.TypeElement;
  */
 public class FactoryBuilder {
 
-    private static final Method CONTEXT_STUB_GET_SHARED_PREFERENCES = Methods.stub("getSharedPreferences");
+    private static final Method METHOD_GET_SHARED_PREFERENCES = Methods.stub("getSharedPreferences");
+    private static final Method METHOD_GET_APPLICATION_CONTEXT = Methods.stub("getApplicationContext");
 
     private final ProcessingEnvironment mProcessingEnvironment;
 
@@ -65,14 +66,15 @@ public class FactoryBuilder {
 
                     @Override
                     protected void write(Block block) {
+                        final Variable varContext = Variables.of(Types.Android.CONTEXT, Modifier.FINAL);
+                        block.set(varContext, METHOD_GET_APPLICATION_CONTEXT.callOnTarget(mParamContext)).append(";").newLine();
+
                         final Variable varPreferences = Variables.of(Types.Android.SHARED_PREFERENCES, Modifier.FINAL);
-                        block.set(varPreferences, new Block().append(
-                                CONTEXT_STUB_GET_SHARED_PREFERENCES.callOnTarget(mParamContext,
-                                        Values.of(sharedPreferencesName),
-                                        Variables.stub(Types.Android.CONTEXT, "Context.MODE_PRIVATE")
-                                )
+                        block.set(varPreferences, METHOD_GET_SHARED_PREFERENCES.callOnTarget(varContext,
+                                Values.of(sharedPreferencesName),
+                                Variables.stub(Types.Android.CONTEXT, "Context.MODE_PRIVATE")
                         )).append(";").newLine();
-                        block.append("return ").append(implementation.newInstance(mParamContext, varPreferences)).append(";");
+                        block.append("return ").append(implementation.newInstance(varContext, varPreferences)).append(";");
                     }
                 })
                 .build());
