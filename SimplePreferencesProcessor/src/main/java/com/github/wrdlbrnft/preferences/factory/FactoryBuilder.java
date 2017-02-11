@@ -7,7 +7,6 @@ import com.github.wrdlbrnft.codebuilder.executables.ExecutableBuilder;
 import com.github.wrdlbrnft.codebuilder.executables.Method;
 import com.github.wrdlbrnft.codebuilder.executables.Methods;
 import com.github.wrdlbrnft.codebuilder.implementations.Implementation;
-import com.github.wrdlbrnft.codebuilder.types.Type;
 import com.github.wrdlbrnft.codebuilder.types.Types;
 import com.github.wrdlbrnft.codebuilder.util.Utils;
 import com.github.wrdlbrnft.codebuilder.variables.Variable;
@@ -57,7 +56,10 @@ public class FactoryBuilder {
                     @Override
                     protected List<Variable> createParameters() {
                         final List<Variable> parameters = new ArrayList<>();
-                        parameters.add(mParamContext = Variables.of(Types.Android.CONTEXT));
+                        parameters.add(mParamContext = new Variable.Builder()
+                                .setType(Types.Android.CONTEXT)
+                                .setName("context")
+                                .build());
                         return parameters;
                     }
 
