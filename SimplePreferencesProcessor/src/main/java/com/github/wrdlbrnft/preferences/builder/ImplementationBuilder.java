@@ -105,13 +105,7 @@ public class ImplementationBuilder {
             }
         }
 
-        final Implementation implementation = preferencesBuilder.build();
-
-        final SourceFile sourceFile = SourceFile.create(mProcessingEnvironment, Utils.getPackageName(interfaceElement));
-        sourceFile.write(implementation);
-        sourceFile.flushAndClose();
-
-        return implementation;
+        return preferencesBuilder.build();
     }
 
     private Method implementMethod(ExecutableElement method, ExecutableBuilder builder) {
