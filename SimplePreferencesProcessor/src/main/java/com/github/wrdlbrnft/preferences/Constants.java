@@ -8,10 +8,4 @@ public class Constants {
     public static final Class<?>[] CLASSES = new Class[]{
             int.class, boolean.class, long.class, float.class, String.class, void.class
     };
-
-    public static final String SHARED_PREFERENCES_POSTFIX = "$$Impl__preferences";
-
-    private Constants() {
-
-    }
 }

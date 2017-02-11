@@ -80,7 +80,7 @@ public class PreferencesAnalyzer {
 
     private String getSharedPreferencesName(TypeElement element) {
         final AnnotationValue value = Utils.getAnnotationValue(element, SimplePreferencesAnnotations.PREFERENCES, "value");
-        return String.valueOf(value.getValue());
+        return String.format("_$%s", value.getValue());
     }
 
     private void analyzeMethod(TypeElement element, ExecutableElement method) {
