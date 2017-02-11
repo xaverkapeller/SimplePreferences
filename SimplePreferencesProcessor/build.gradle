@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 dependencies {
-    compile 'com.github.wrdlbrnft:code-builder:0.1.0.5'
+    compile 'com.github.wrdlbrnft:code-builder:0.2.0.14'
 }
 
 final bintrayUser = hasProperty('bintray_user') ? property('bintray_user') : ''

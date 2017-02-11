@@ -1,5 +1,6 @@
 package com.github.wrdlbrnft.preferences;
 
+import com.github.wrdlbrnft.codebuilder.implementations.Implementation;
 import com.github.wrdlbrnft.codebuilder.types.Type;
 import com.github.wrdlbrnft.preferences.analyzer.PreferencesAnalyzer;
 import com.github.wrdlbrnft.preferences.analyzer.PreferencesAnalyzerResult;
@@ -55,8 +56,8 @@ public class SimplePreferencesProcessor extends AbstractProcessor {
             return;
         }
 
-        final Type implementationType = mImplementationBuilder.build(result);
-        mFactoryBuilder.build(result, implementationType);
+        final Implementation implementation = mImplementationBuilder.build(result);
+        mFactoryBuilder.build(result, implementation);
     }
 
     @Override

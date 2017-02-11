@@ -36,13 +36,15 @@ public class FactoryBuilder {
         mProcessingEnvironment = processingEnvironment;
     }
 
-    public void build(PreferencesAnalyzerResult result, final Type implementationType) throws IOException {
+    public void build(PreferencesAnalyzerResult result, final Implementation implementation) throws IOException {
         final TypeElement interfaceElement = result.getInterfaceElement();
         final String sharedPreferencesName = result.getSharedPreferencesName();
 
         final Implementation.Builder builder = new Implementation.Builder();
         builder.setName(createFactoryName(interfaceElement));
         builder.setModifiers(EnumSet.of(Modifier.PUBLIC, Modifier.FINAL));
+
+        builder.addNestedImplementation(implementation);
 
         builder.addMethod(new Method.Builder()
                 .setModifiers(EnumSet.of(Modifier.PUBLIC, Modifier.STATIC))
@@ -68,7 +70,7 @@ public class FactoryBuilder {
                                         Variables.stub(Types.Android.CONTEXT, "Context.MODE_PRIVATE")
                                 )
                         )).append(";").newLine();
-                        block.append("return ").append(implementationType.newInstance(mParamContext, varPreferences)).append(";");
+                        block.append("return ").append(implementation.newInstance(mParamContext, varPreferences)).append(";");
                     }
                 })
                 .build());

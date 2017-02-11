@@ -44,12 +44,11 @@ public class ImplementationBuilder {
         mProcessingEnvironment = processingEnvironment;
     }
 
-    public Type build(PreferencesAnalyzerResult result) throws IOException {
+    public Implementation build(PreferencesAnalyzerResult result) throws IOException {
         final TypeElement interfaceElement = result.getInterfaceElement();
         final Implementation.Builder preferencesBuilder = new Implementation.Builder();
-        preferencesBuilder.setName(Utils.createGeneratedClassName(interfaceElement, "", "$Impl"));
         preferencesBuilder.addImplementedType(Types.of(interfaceElement));
-        preferencesBuilder.setModifiers(EnumSet.of(Modifier.FINAL));
+        preferencesBuilder.setModifiers(EnumSet.of(Modifier.PRIVATE, Modifier.STATIC ,Modifier.FINAL));
 
         mFieldContext = new Field.Builder()
                 .setType(Types.Android.CONTEXT)
