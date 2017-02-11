@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -73,12 +74,13 @@ public class PreferencesAnalyzer {
         }
 
         final List<GetterSetterPair> pairs = new ArrayList<>(mPairMap.values());
-        final String sharedPreferencesName = createSharedPreferencesName(element);
+        final String sharedPreferencesName = getSharedPreferencesName(element);
         return new PreferencesAnalyzerResult(element, pairs, sharedPreferencesName);
     }
 
-    private String createSharedPreferencesName(TypeElement element) {
-        return element.getQualifiedName().toString() + Constants.SHARED_PREFERENCES_POSTFIX;
+    private String getSharedPreferencesName(TypeElement element) {
+        final AnnotationValue value = Utils.getAnnotationValue(element, SimplePreferencesAnnotations.PREFERENCES, "value");
+        return String.valueOf(value.getValue());
     }
 
     private void analyzeMethod(TypeElement element, ExecutableElement method) {
