@@ -12,11 +12,9 @@ The preferences you always wanted on Android.
 Just add these two lines to the dependencies closure of your module:
 
 ```groovy
-compile 'com.github.wrdlbrnft:simple-preferences:0.3.0.8'
-annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.3.0.8'
+api 'com.github.wrdlbrnft:simple-preferences:0.4.0.9'
+annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.4.0.9'
 ```
-
-If you are using an old version of the Android Build Tools the `annotationProcessor` configuration might not be available. In that case you need to use the android-apt Grade plugin and its `apt` configuration instead.
 
 ## How to use it
 
@@ -34,17 +32,17 @@ public interface ExamplePreferences {
 }
 ```
 
-The String you enter in `@Preferences` will be used to set the name of the preferences file so don't change it when refactoring! That would cause all saved information to be lost (at least until you change it back). 
+The String you enter in `@Preferences` will be used to set the name of the preferences file so don't change it when refactoring! That would cause all saved data to be lost (at least until you change it back). 
 
-After creating the interface SimplePreferences generates a factory class which you can use to create an instance of your preferences interface:
+After creating the interface SimplePreferences generates a factory class which you can use to create an instance of your preferences interface. The factory classes are always named like this: `<Name of the Interface>Factory`.
 
 ```java
 ExamplePreferences preferences = ExamplePreferencesFactory.newInstance(context);
 ```
 
-The factory classes are always named like this: `<Name of the Interface>Factory`.
+**NOTE**: The factory classes are generated when you build your project so it should become usable after you have build your project at least once. 
 
-And that's it! Now you can use the setters and getters and anything you save will be persisted.
+And that's it! Now you can use the setters and getters to save and load data. Any saved data will automatically be persisted on the device.
 
 ```java
 String text = preferences.getText();
