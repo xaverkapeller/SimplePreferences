@@ -12,8 +12,8 @@ The preferences you always wanted on Android.
 Just add these two lines to the dependencies closure of your module:
 
 ```groovy
-api 'com.github.wrdlbrnft:simple-preferences:0.4.0.9'
-annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.4.0.9'
+api 'com.github.wrdlbrnft:simple-preferences:0.4.0.10'
+annotationProcessor 'com.github.wrdlbrnft:simple-preferences-processor:0.4.0.10'
 ```
 
 ## How to use it
